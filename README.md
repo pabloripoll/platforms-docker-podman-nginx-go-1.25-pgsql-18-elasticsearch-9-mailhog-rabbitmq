@@ -235,6 +235,11 @@ Once variables are set, each Docker platform container environment variables can
   $ make db-set
   ```
 
+- Setup the search database container
+  ```bash
+  $ make elastic-set
+  ```
+
 - Setup the mail service container
   ```bash
   $ make mailer-set
@@ -261,6 +266,12 @@ Once variables are set, each Docker platform container environment variables can
   ```
 <br>
 
+- Create and startup the search database container
+  ```bash
+  $ make elastic-create
+  ```
+<br>
+
 - Create and startup the mail service container
   ```bash
   $ make mailer-create
@@ -275,7 +286,7 @@ Once variables are set, each Docker platform container environment variables can
 
 Remember to use `make help` command to see all available receipes, so you can execute multiple platforms recipes at once as the following example:
 ```bash
-$ yes | make apirest-destroy db-destroy mailer-destroy broker-destroy
+$ yes | make apirest-destroy db-destroy elastic-destroy mailer-destroy broker-destroy
 ```
 
 Execute the Docker ps command to see the containers that are up and running.
@@ -313,6 +324,13 @@ Repository directories structure overview
 │   │   └── Makefile
 │   │
 │   ├── pgsql-18
+│   │   ├── docker
+│   │   │   ├── .env
+│   │   │   ├── docker-compose.yml
+│   │   │   └── ...etc
+│   │   └── Makefile
+│   │
+│   ├── elasticsearch-9
 │   │   ├── docker
 │   │   │   ├── .env
 │   │   │   ├── docker-compose.yml
