@@ -1,0 +1,13 @@
+services:
+
+  kibana:
+    ports:
+      - ${COMPOSE_CLIENT_PORT}:5601
+    networks:
+      - net
+
+networks:
+  net:
+    driver: bridge
+    external: true
+    name: ${COMPOSE_LEAD}-${COMPOSE_CNET}

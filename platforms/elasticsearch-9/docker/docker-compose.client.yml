@@ -1,0 +1,18 @@
+services:
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.4.3
+    container_name: ${COMPOSE_LEAD}-${COMPOSE_NAME}-client
+    restart: always
+    environment:
+      ELASTICSEARCH_HOSTS: http://${COMPOSE_CLIENT_HOSTS}:9200
+      # If your .env architecture passes down multiple cluster nodes, the official Elastic
+      # Docker Image Guide requires JSON array formatting wrapped in single quotes
+      #ELASTICSEARCH_HOSTS: '["http://${COMPOSE_CLIENT_DB_HOST}:9200"]'
+      ELASTICSEARCH_USERNAME: ${COMPOSE_CLIENT_USERNAME}
+      ELASTICSEARCH_PASSWORD: ${COMPOSE_CLIENT_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          cpus: ${COMPOSE_CLIENT_CPUS}
+          memory: ${COMPOSE_CLIENT_MEMO}
