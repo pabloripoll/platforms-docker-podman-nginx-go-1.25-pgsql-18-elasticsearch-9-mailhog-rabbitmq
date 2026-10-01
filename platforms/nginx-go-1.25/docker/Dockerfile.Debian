@@ -1,0 +1,72 @@
+FROM debian:bookworm-slim
+
+ARG UID
+ARG GID
+ENV UID=${UID}
+ENV GID=${GID}
+ARG USER
+ARG GROUP
+ENV USER=${USER}
+ENV GROUP=${GROUP}
+
+# Install core system packages using Debian's native package manager
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    sudo \
+    curl \
+    wget \
+    openssl \
+    nginx \
+    zip \
+    nano \
+    git \
+    make \
+    supervisor \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create user and group using native Debian shadow-utils syntax
+RUN groupadd -g ${GID} ${GROUP} \
+    && useradd -u ${UID} -m -d /home/${USER} -s /bin/bash -g ${GROUP} ${USER} \
+    && chmod u+s /bin/su \
+    && echo "${USER} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Install GO (Extract into /usr/local)
+RUN wget https://go.dev && \
+    rm -rf /usr/local/go && tar -C /usr/local -xzf go1.25.1.linux-amd64.tar.gz && \
+    rm go1.25.1.linux-amd64.tar.gz
+
+# Configure system-wide environment variables for Go
+ENV PATH="/usr/local/go/bin:/home/${USER}/go/bin:${PATH}"
+ENV GOPATH="/home/${USER}/go"
+
+# Configure NGINX (Safe setup with configuration folders)
+COPY config/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY config/nginx/conf.d /etc/nginx/conf.d/
+RUN rm -rf /var/www/html
+
+# Configure Supervisor
+COPY config/supervisor/supervisord.conf /etc/supervisor/supervisord.conf
+COPY config/supervisor/conf.d/. /etc/supervisor/conf.d/
+
+# Create project root directory
+RUN mkdir -p /var/www
+WORKDIR /var/www
+
+# Ensure system folders are writable by your custom non-root user
+RUN mkdir -p /run /var/lib/nginx /var/log/nginx /var/log/supervisor /var/run/supervisor \
+    && chown -R ${USER}:${GROUP} /var/www /run /var/lib/nginx /var/log/nginx /var/log/supervisor /var/run/supervisor
+
+# Switch execution context to your custom non-root user
+USER ${USER}
+
+# Validate Go version and install Air hot-reloader
+RUN go version \
+    && go install ://github.com \
+    && sudo cp /home/${USER}/go/bin/air /usr/local/bin/air
+
+# NGINX: 80 - GO: 8080
+EXPOSE 80 8080
+
+# Start supervisor, which manages nginx and Go application
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
