@@ -222,6 +222,129 @@ db-sql-drop: ## drops the container main database but recreates the database wit
 	cd platforms/$(DATABASE_PLTF) && $(MAKE) sql-drop
 
 # -------------------------------------------------------------------------------------------------
+#  Elasticsearch & Kibana
+# -------------------------------------------------------------------------------------------------
+.PHONY: elastic-host-check elastic-set
+
+elastic-host-check: ## shows container service requirements status on local machine
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) ports-check
+
+elastic-set: ## sets the database and client enviroment file to build both container
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) env-set
+
+# --- #
+
+.PHONY: elastic-info elastic-build elastic-create elastic-ssh elastic-start elastic-stop elastic-down elastic-destroy
+
+elastic-info: ## shows docker related information
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) info
+
+elastic-build: ## builds and ensures changes in the Dockerfile, build steps, or copied-in files are applied
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) build
+
+elastic-create: ## starts up or creates the container for running in detached mode
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) up
+
+elastic-network: ## starts up into an existing custom network for container-to-container communication, runnning in detached mode
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) clear network
+
+elastic-ssh: ## enters the apirest container shell
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) ssh
+
+elastic-start: ## starts the database container running
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) start
+
+elastic-stop: ## stops the database container but its assets will not be destroyed
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) stop
+
+elastic-restart: ## restarts the running database container
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) restart
+
+elastic-down: ## stops and removes the container, network and volume established
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to stop and remove the "${C_BLU}"$(ELASTIC_PLTF)"${C_END}" container with its network and volume."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"O.K.! container continues with its latest status."${C_END}; \
+    else \
+		cd platforms/$(ELASTIC_PLTF) && $(MAKE) clear; \
+		echo ${C_GRN}"O.K.! $(ELASTIC_PLTF) has been cleared down."${C_END}; \
+	fi
+
+elastic-destroy: ## destroys completly the database container with its data
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to remove the "${C_BLU}"$(ELASTIC_PLTF)"${C_END}" container and delete its image resource and persistance data."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"O.K.! container continues with its latest status."${C_END}; \
+    else \
+		cd platforms/$(ELASTIC_PLTF) && $(MAKE) stop clear destroy; \
+		echo -n ${C_GRN}"Do you want to clear DOCKER cache? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+			echo ${C_YEL}"The following commands are delegated to be executed by user:"${C_END}; \
+			echo "$$ $(DOCKER) system prune"; \
+			echo "$$ $(DOCKER) volume prune"; \
+		else \
+			$(DOCKER) system prune -f; \
+			$(DOCKER) volume prune -f; \
+			echo ${C_GRN}"O.K.! DOCKER cache has been cleared up."${C_END}; \
+		fi \
+	fi
+
+# --- #
+
+.PHONY: elastic-client-info elastic-client-build elastic-client-create elastic-client-ssh elastic-client-start elastic-client-stop elastic-client-down elastic-client-destroy
+
+elastic-client-info: ## shows docker related information
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) info-client
+
+elastic-client-build: ## builds and ensures changes in the Dockerfile, build steps, or copied-in files are applied
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) build-client
+
+elastic-client-create: ## starts up or creates the container for running in detached mode
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) up-client
+
+elastic-client-network: ## starts up into an existing custom network for container-to-container communication, runnning in detached mode
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) clear-client network-client
+
+elastic-client-ssh: ## enters the apirest container shell
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) ssh-client
+
+elastic-client-start: ## starts the database container running
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) start-client
+
+elastic-client-stop: ## stops the database container but its assets will not be destroyed
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) stop-client
+
+elastic-client-restart: ## restarts the running database container
+	cd platforms/$(ELASTIC_PLTF) && $(MAKE) restart-client
+
+elastic-client-down: ## stops and removes the container, network and volume established
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to stop and remove the "${C_BLU}"$(ELASTIC_PLTF)"${C_END}" container with its network and volume."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"O.K.! container continues with its latest status."${C_END}; \
+    else \
+		cd platforms/$(ELASTIC_PLTF) && $(MAKE) clear-client; \
+		echo ${C_GRN}"O.K.! $(ELASTIC_PLTF) has been cleared down."${C_END}; \
+	fi
+
+elastic-client-destroy: ## destroys completly the database container with its data
+	echo ${C_RED}"Attention!"${C_END};
+	echo ${C_YEL}"You're about to remove the "${C_BLU}"$(ELASTIC_PLTF)"${C_END}" container and delete its image resource and persistance data."${C_END};
+	@echo -n ${C_RED}"Are you sure to proceed? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+        echo ${C_GRN}"O.K.! container continues with its latest status."${C_END}; \
+    else \
+		cd platforms/$(MONGODB_PLTF) && $(MAKE) clear-client destroy-client; \
+		echo -n ${C_GRN}"Do you want to clear DOCKER cache? "${C_END}"[y/n]: " && read response && if [ $${response:-'n'} != 'y' ]; then \
+			echo ${C_YEL}"The following commands are delegated to be executed by user:"${C_END}; \
+			echo "$$ $(DOCKER) system prune"; \
+			echo "$$ $(DOCKER) volume prune"; \
+		else \
+			$(DOCKER) system prune -f; \
+			$(DOCKER) volume prune -f; \
+			echo ${C_GRN}"O.K.! DOCKER cache has been cleared up."${C_END}; \
+		fi \
+	fi
+
+# -------------------------------------------------------------------------------------------------
 #  Mailer Service
 # -------------------------------------------------------------------------------------------------
 .PHONY: mailer-hostcheck mailer-info mailer-set mailer-create mailer-network mailer-ssh mailer-start mailer-stop mailer-down mailer-destroy
